@@ -1,19 +1,22 @@
 DefaultMask OFF
-FrameLimit 64
+'FrameLimit 64
 
 Include "customfunctions.cb"
 
 Const SW = 800
 Const SH = 600
+Global SS : SS = Distance(0,0,SW,SH)
 
 Global GROUND_ROCK : GROUND_ROCK     = 0
 Global GROUND_DIRT : GROUND_DIRT     = 1
 Global GROUND_BUILDING : GROUND_BUILDING = 2
 
 Global dbx : dbx = 10
-
-
+Global skyMasked, sky, BGsky
 Global player
+
+Global sx : sx = SW+100
+Global sy : sy = -100
 
 Dim Ground(SW, 5)
 '(i,0)			Korkeus
@@ -27,7 +30,15 @@ Dim Ground(SW, 5)
 
 
 Type CloudBlock
-	Field clr 'muistipala
+	Field x As Float
+	Field y As Float
+	Field xp As Float
+	Field yp As Float
+	Field radius As Float
+	Field r
+	Field g
+	Field b
+	Field a
 End Type
 
 Type Cloud
@@ -147,16 +158,52 @@ tPlane\y		= 200
 tPlane\angle	= GetAngle(tPlane\x, tPlane\y, MouseX(), MouseY())
 
 player = ConvertToInteger(tPlane)
+skyMasked = MakeImage(SW+10, SH+10)
+BGsky = MakeImage(SW+10, SH+10)
+cbeSetLineWidth(15)
+DrawToImage BGsky
+	Color 0,0,255
+	For x = -10 To SW Step 15
+		cbeColor(Rand(50,100), Rand(50,100), Rand(0,0), 150)
+		Line sx, sy, x, SH+10
+	Next x
+	For y = 0 To SH+10 Step 15
+		cbeColor(Rand(50,100), Rand(50,100), Rand(0,0), 150)
+		Line sx, sy, -10, y
+	Next y
+DrawToScreen
+
+sky = MakeImage(SW+10, SH+10)
+DrawToImage sky
+	Color 0,0,255
+	Box 0,0,SW,SH
+	For x = -10 To SW Step 15
+		cbeColor(Rand(200,255), Rand(200,255), Rand(0,50), 150)
+		Line sx, sy, x, SH+10
+	Next x
+	For y = 0 To SH+10 Step 15
+		cbeColor(Rand(200,255), Rand(200,255), Rand(0,50), 150)
+		Line sx, sy, -10, y
+	Next y
+DrawToScreen
+cbeSetLineWidth(1)
 
 SCREEN SW,SH
 
+GenerateClouds()
 GenerateGround()
 
 Repeat
+
+	UpdateBG()
 	Controls()
+	UpdateClouds()
+	UpdateBG()
 	UpdateEntitets()
+	DrawBG()
 	DrawGround()
 	DrawEntitets()
+	DrawClouds()
 	DrawGUI()
 	
 	SetWindow FPS()+""
@@ -184,8 +231,57 @@ Function Controls()
 
 	dbx = dbx - KeyHit(cbKeyLeft) + KeyHit(cbKeyRight)
 	
+	
+	If (KeyHit(64)) Then GenerateClouds()
 	If (KeyHit(63)) Then GenerateGround()
 End Function 
+
+Function UpdateBG()
+	DrawToImage skyMasked
+		Box 0, 0, SW, SH
+		DrawImage sky, 0, 0
+		cbeSetBlendMode(CBE_BLEND_OVERWRITE, 1)
+		cbeColor(255,0,255,0)
+		For c.CloudBlock = Each CloudBlock
+			alpha# = GetAngle(sx, sy, c\x, c\y)
+	
+			s# = Distance(sx, sy, c\x, c\y)
+			t# = Distance(sx, sy, c\x, c\y)
+	
+			tx0# = c\x + c\radius * Cos(alpha+90)
+			ty0# = c\y - c\radius * Sin(alpha+90)
+			dist0# = Distance(sx, sy, tx0, ty0)
+			gamma0# = GetAngle(sx, sy, tx0, ty0)
+	
+			tx1# = c\x + c\radius * Cos(alpha-90)
+			ty1# = c\y - c\radius * Sin(alpha-90)
+			dist1# = Distance(sx, sy, tx1, ty1)
+			gamma1# = GetAngle(sx, sy, tx1, ty1)
+	
+			cbeTriangle(sx + dist0 * Cos(gamma0), sy - dist0 * Sin(gamma0), sx + 2 * SS * Cos(gamma0), sy - 2 * SS * Sin(gamma0), sx + 2 * SS * Cos(gamma1), sy - 2 * SS * Sin(gamma1))
+			cbeTriangle(sx + dist1 * Cos(gamma1), sy - dist1 * Sin(gamma1), sx + dist0 * Cos(gamma0), sy - dist0 * Sin(gamma0), sx + 2 * SS * Cos(gamma1), sy - 2 * SS * Sin(gamma1))
+		Next c
+		cbeSetBlendMode(CBE_BLEND_RESET, 1)
+	DrawToScreen
+End Function
+
+Function UpdateClouds()
+	For c.CloudBlock = Each CloudBlock
+		c\x = c\x + c\xp
+		c\y = c\y + c\yp
+		
+		If (c\x < -10-c\r And c\xp < 0) Then Delete c
+		if (c\y > SW+10+c\r And c\xp > 0) Then Delete c
+	Next c
+	If (Rand(2000) = 0) Then
+		If (Rand(1)) Then
+			nx = -200
+		Else
+			nx = SW+200
+		EndIf
+		GenerateCloud(nx, Rand(100, 350))
+	EndIf
+End Function
 
 Function UpdateEntitets()
 	tPlane.Plane = ConvertToType(player)
@@ -200,27 +296,15 @@ Function UpdateEntitets()
 		Lose()
 	EndIf
 
-	If Rand(100) = 0 Then
-		en.Enemy = New(Enemy)
-		If (Rand(1) = 0) Then
-			en\x = -10
-			en\xp = 1
-		Else 
-			en\x = SW+10
-			en\xp = -1
-		EndIf
-		en\y = 300 + Rand(-20, 20)
-		en\angle = GetAngle(0, 0, en\xp, en\yp)
-		en\mhealth = Rand(1,10)
-		en\health = en\mhealth
-		
-		en\sizeW = Rand(10,20)
-		en\sizeH = Rand(5,10)
-	End If
+	If Rand(100) = 0 Then GenerateEnemy()
 
 	For en.Enemy = Each Enemy
 		en\x = en\x + en\xp
 		en\y = en\y + en\yp
+		
+		If (en\x < 0 And en\xp < 0) Or (en\y > SW And en\xp > 0) Then
+			Delete en
+		EndIf
 	Next en
 
 	For b.Bomb = Each Bomb
@@ -265,10 +349,16 @@ End Function
 
 Function DrawEntitets()
 	tPlane.Plane = ConvertToType(player)
-	Line tPlane\x, tPlane\y, tPlane\x + tPlane\length * Cos(tPlane\angle), tPlane\y - tPlane\length * Sin(tPlane\angle)
+	Color 0,0,0
+	cbeTriangle(tPlane\x + tPlane\length * Cos(tPlane\angle-90), tPlane\y - tPlane\length * Sin(tPlane\angle-90), tPlane\x + tPlane\length * Cos(tPlane\angle+90), tPlane\y - tPlane\length * Sin(tPlane\angle+90), tPlane\x + tPlane\length * Cos(tPlane\angle), tPlane\y - tPlane\length * Sin(tPlane\angle))
+	Color 255,255,255
+	cbeTriangle(tPlane\x + tPlane\length * Cos(tPlane\angle-90), tPlane\y - tPlane\length * Sin(tPlane\angle-90), tPlane\x + tPlane\length * Cos(tPlane\angle+90), tPlane\y - tPlane\length * Sin(tPlane\angle+90), tPlane\x + tPlane\length * Cos(tPlane\angle), tPlane\y - tPlane\length * Sin(tPlane\angle), False)
 
 	For en.Enemy = Each Enemy
+		Color 0,0,0
 		Box en\x-en\sizeW/2, en\y-en\sizeH/2, en\sizeW, en\sizeH
+		Color 255,255,255
+		Box en\x-en\sizeW/2, en\y-en\sizeH/2, en\sizeW, en\sizeH, False
 	Next en
 
 	For b.Bomb = Each Bomb
@@ -287,7 +377,20 @@ Function DrawEntitets()
 	Next e
 End Function 
 
+Function DrawBG()
+	DrawImage BGsky, 0, 0
+	DrawImage skyMasked, 0, 0
+End Function
+
+Function DrawClouds()
+	For c.CloudBlock = Each CloudBlock
+		cbeColor(c\r, c\g, c\b, c\a)
+		Circle c\x - c\radius, c\y - c\radius, c\radius * 2
+	Next c
+End Function
+
 Function DrawGround() 
+
 	For i = 0 To SW
 		Color 120, 120, 120
 		Line i, SH-Ground(i, 0), i, SH
@@ -328,6 +431,56 @@ Function DrawGUI()
 	Line dbx, 350, dbx, 450
 	
 	Text 10, SH-22, "p:"+tPlane\points
+End Function 
+
+Function GenerateCloud(nx, ny)
+	For i = 0 To Rand(3,7)
+		Print "New Cloud"
+		nr = Rand(60,100)
+		nxp# = Rnd(0.5, 0.7)
+		If (Rand(1)) Then nxp# = -Rnd(0.2, 0.5)
+		e = 120
+		While e > 40
+			Print "New CloudBlock"
+			c.CloudBlock = New(CloudBlock)
+			c\x = nx + Cos(e) * nr
+			c\y = ny - Sin(e) * nr
+			c\xp = nxp
+			c\radius = Rand(10,20)
+			c\r = Rand(200,240)
+			c\g = Rand(200,240)
+			c\b = Rand(200,240)
+			c\a = 255
+			e = e - Rand(7,10)
+		Wend
+	Next i
+End Function
+
+Function GenerateEnemy()
+	en.Enemy = New(Enemy)
+	If (Rand(1) = 0) Then
+		en\x = -10
+		en\xp = 1
+	Else 
+		en\x = SW+10
+		en\xp = -1
+	EndIf
+	en\y = 300 + Rand(-20, 20)
+	en\angle = GetAngle(0, 0, en\xp, en\yp)
+	en\mhealth = Rand(1,10)
+	en\health = en\mhealth
+	
+	en\sizeW = Rand(10,20)
+	en\sizeH = Rand(5,10)
+End Function 
+
+Function GenerateClouds()
+	For c.CloudBlock = Each CloudBlock
+		Delete c
+	Next c
+	For i = 0 To Rand(2,4)
+		GenerateCloud(Rand(SW), Rand(100, 350))
+	Next i
 End Function 
 
 Function GenerateGround()

@@ -4,6 +4,8 @@ SS = Distance(0,0,SW,SH)
 
 SCREEN SW,SH
 
+DefaultMask OFF
+
 Include "customfunctions.cb"
 
 Type Cc
@@ -21,55 +23,59 @@ Next i
 
 sky = MakeImage(SW, SH)
 DrawToImage sky
+	Color 0,0,255
+	Box 0,0,SW,SH
 	sx = 500
 	sy = 100
 	For x = 0 To SW
-		Color Rand(200,255), Rand(200,255), Rand(0,50)
+		cbeColor(Rand(200,255), Rand(200,255), Rand(0,50), 150)
 		Line sx, sy, x, SH
 	Next x
 	For y = 0 To SH
-		Color Rand(200,255), Rand(200,255), Rand(0,50)
+		cbeColor(Rand(200,255), Rand(200,255), Rand(0,50), 150)
 		Line sx, sy, 0, y
 	Next y
 DrawToScreen
 
-skyMask = MakeImage(SW, SH)
-DrawToImage skyMask
-	Color 255,0,255
-	For c.Cc = Each Cc
-		Circle c\x-c\r, c\y-c\r, c\r*2
-		alpha# = GetAngle(sx, sy, c\x, c\y)
-
-		s# = Distance(sx, sy, c\x, c\y)
-		t# = Distance(sx, sy, c\x, c\y)
-
-		tx0# = c\x + c\r * Cos(alpha+90)
-		ty0# = c\y - c\r * Sin(alpha+90)
-		dist0# = Distance(sx, sy, tx0, ty0)
-		gamma0# = GetAngle(sx, sy, tx0, ty0)
-
-		tx1# = c\x + c\r * Cos(alpha-90)
-		ty1# = c\y - c\r * Sin(alpha-90)
-		dist1# = Distance(sx, sy, tx1, ty1)
-		gamma1# = GetAngle(sx, sy, tx1, ty1)
-
-		Line sx + dist0 * Cos(gamma0), sy - dist0 * Sin(gamma0), sx + SW * Cos(gamma0), sy - SW * Sin(gamma0)
-		Line sx + dist1 * Cos(gamma1), sy - dist1 * Sin(gamma1), sx + SW * Cos(gamma1), sy - SW * Sin(gamma1)
-		
-		cbeTriangle(sx + dist0 * Cos(gamma0), sy - dist0 * Sin(gamma0), sx + SS * Cos(gamma0), sy - SS * Sin(gamma0), sx + SS * Cos(gamma1), sy - SS * Sin(gamma1))
-		cbeTriangle(sx + dist1 * Cos(gamma1), sy - dist1 * Sin(gamma1), sx + dist0 * Cos(gamma0), sy - dist0 * Sin(gamma0), sx + SS * Cos(gamma1), sy - SS * Sin(gamma1))
-
-	Next c
-DrawToScreen
-
 skyMasked = MakeImage(SW, SH)
-DrawToImage skyMasked
-	DrawImage sky, 0, 0
-	DrawImage skyMask, 0, 0
-DrawToScreen
 
 Repeat
-	ClsColor 0,0,0255
+	DrawToImage skyMasked
+		Box 0, 0, SW, SH
+		DrawImage sky, 0, 0
+		cbeSetBlendMode(CBE_BLEND_OVERWRITE, 1)
+		cbeColor(255,0,255,0)
+		For c.Cc = Each Cc
+			alpha# = GetAngle(sx, sy, c\x, c\y)
+	
+			s# = Distance(sx, sy, c\x, c\y)
+			t# = Distance(sx, sy, c\x, c\y)
+	
+			tx0# = c\x + c\r * Cos(alpha+90)
+			ty0# = c\y - c\r * Sin(alpha+90)
+			dist0# = Distance(sx, sy, tx0, ty0)
+			gamma0# = GetAngle(sx, sy, tx0, ty0)
+	
+			tx1# = c\x + c\r * Cos(alpha-90)
+			ty1# = c\y - c\r * Sin(alpha-90)
+			dist1# = Distance(sx, sy, tx1, ty1)
+			gamma1# = GetAngle(sx, sy, tx1, ty1)
+	
+			cbeTriangle(sx + dist0 * Cos(gamma0), sy - dist0 * Sin(gamma0), sx + SS * Cos(gamma0), sy - SS * Sin(gamma0), sx + SS * Cos(gamma1), sy - SS * Sin(gamma1))
+			cbeTriangle(sx + dist1 * Cos(gamma1), sy - dist1 * Sin(gamma1), sx + dist0 * Cos(gamma0), sy - dist0 * Sin(gamma0), sx + SS * Cos(gamma1), sy - SS * Sin(gamma1))
+		Next c
+		cbeSetBlendMode(CBE_BLEND_RESET, 1)
+	DrawToScreen
+
+
+
+
+
+
+
+	Color 255,255,255
+	Line 0,0,SW, SH
+	Line 0,SH,SW,0
 	DrawImage skyMasked, 0, 0
 	SetWindow FPS()+""
 	DrawScreen
