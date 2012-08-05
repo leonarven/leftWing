@@ -1,0 +1,116 @@
+Type CloudBlock
+	Field x As Float
+	Field y As Float
+	Field xp As Float
+	Field yp As Float
+	Field radius As Float
+	Field r
+	Field g
+	Field b
+	Field a
+End Type
+
+Type Cloud
+	Field pos 'muistipala
+	Field blocksCount 'Pilvenpalojen m‰‰r‰
+	Field blocks 'mustipala jossa pilven palat
+End Type
+
+Type Clr
+	Field r As Float
+	Field g As Float
+	Field b As Float
+	Field a As Float
+End Type
+
+Type Vector2
+	Field x As Float
+	Field y As Float
+End Type
+
+Type Vector3
+	Field x As Float
+	Field y As Float
+	Field z As Float
+End Type
+
+Type Plane
+	Field x					' x
+	Field y					' y
+	Field xp As Float
+	Field yp As Float
+	Field angle				' kiihtyvyys
+	Field acc
+	Field speed				' nopeus
+	Field length			' pituus (vaikutanee k‰‰ntyvyyteen)
+
+	Field mhealth			' terveys
+	Field health			' terveys
+	Field lifes				' el‰m‰t
+
+	Field points As Float	' pisteet
+End Type
+
+Type Bomb
+	Field x
+	Field y
+	Field xp As Float
+	Field yp As Float
+	Field m As Float
+End Type
+
+Type Particle
+	Field x
+	Field y
+	Field speed
+	Field a
+	Field xp As Float
+	Field yp As Float
+	Field m As Float
+	Field r
+	Field g
+	Field b
+
+	Field ttime
+	Field tstart
+	Field tr
+	Field tg
+	Field tb
+
+	Field atime
+	Field astart
+End Type
+
+Type Explode
+	Field x
+	Field y
+	Field radius As Float
+	Field mradius As Float
+
+	Field r As Float
+	Field g As Float
+	Field b As Float
+	Field alpha As Float
+
+	Field ttime
+	Field tstart
+	Field tr As Float
+	Field tg As Float
+	Field tb As Float
+
+	Field atime
+	Field astart
+End Type
+
+Type Enemy
+	Field x
+	Field y
+	Field yp As Float
+	Field xp As Float
+	Field angle As Float
+
+	Field mhealth			' terveys
+	Field health
+	Field sizeW
+	Field sizeH
+End Type
