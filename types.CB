@@ -1,21 +1,3 @@
-Type CloudBlock
-	Field x As Float
-	Field y As Float
-	Field xp As Float
-	Field yp As Float
-	Field radius As Float
-	Field r
-	Field g
-	Field b
-	Field a
-End Type
-
-Type Cloud
-	Field pos 'muistipala
-	Field blocksCount 'Pilvenpalojen m‰‰r‰
-	Field blocks 'mustipala jossa pilven palat
-End Type
-
 Type Clr
 	Field r As Float
 	Field g As Float
@@ -39,6 +21,7 @@ Type Plane
 	Field y					' y
 	Field xp As Float
 	Field yp As Float
+	Field name As String
 	Field angle				' kiihtyvyys
 	Field acc
 	Field speed				' nopeus
@@ -113,4 +96,22 @@ Type Enemy
 	Field health
 	Field sizeW
 	Field sizeH
+End Type
+
+Type Cloud
+	Field pos 'muistipala
+	Field blocksCount 'Pilvenpalojen m‰‰r‰
+	Field blocks 'mustipala jossa pilven palat
+End Type
+
+Type CloudBlock
+	Field x As Float
+	Field y As Float
+	Field xp As Float
+	Field yp As Float
+	Field radius As Float
+	Field r
+	Field g
+	Field b
+	Field a
 End Type

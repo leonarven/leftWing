@@ -30,8 +30,9 @@ Dim Ground(SW, 5)
 '		(i,3)		mullan syvyys
 '		(i,4)		hit-offset-korkeus
 
-' Alustetaan lentokoneen tyyppi
+
 tPlane.Plane	= New(Plane)
+tPlane\name		= "test"
 tPlane\health	= 100
 tPlane\lifes	= 3
 tPlane\speed	= 3
