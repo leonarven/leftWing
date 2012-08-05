@@ -15,9 +15,10 @@ local.properties
 .classpath
 .settings/
 .loadpath
-allegro.log
+*.log
 test.cb
 test.CB
+*.exe
 
 # External tool builders
 .externalToolBuilders/
